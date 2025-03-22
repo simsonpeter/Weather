@@ -34,6 +34,10 @@
       font-size: 18px;
       color: #555;
     }
+    .error {
+      color: red;
+      font-size: 16px;
+    }
   </style>
 </head>
 <body>
@@ -41,6 +45,7 @@
     <div class="location">Loading location...</div>
     <div class="temperature">--°C</div>
     <div class="description">--</div>
+    <div class="error"></div>
   </div>
 
   <script>
@@ -48,17 +53,21 @@
     const locationElement = document.querySelector('.location');
     const temperatureElement = document.querySelector('.temperature');
     const descriptionElement = document.querySelector('.description');
+    const errorElement = document.querySelector('.error');
 
     // Function to fetch weather data from Open-Meteo
     async function fetchWeather(lat, lon) {
       const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
       try {
         const response = await fetch(apiUrl);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
         const data = await response.json();
         displayWeather(data);
       } catch (error) {
         console.error('Error fetching weather data:', error);
-        locationElement.textContent = 'Failed to fetch weather data.';
+        errorElement.textContent = 'Failed to fetch weather data. Please try again later.';
       }
     }
 
@@ -117,14 +126,14 @@
     // Function to handle location error
     function onLocationError(error) {
       console.error('Error getting location:', error);
-      locationElement.textContent = 'Unable to retrieve location.';
+      errorElement.textContent = 'Unable to retrieve location. Please enable location access in your browser settings.';
     }
 
     // Get user's location
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(onLocationSuccess, onLocationError);
     } else {
-      locationElement.textContent = 'Geolocation is not supported by your browser.';
+      errorElement.textContent = 'Geolocation is not supported by your browser.';
     }
   </script>
 </body>
