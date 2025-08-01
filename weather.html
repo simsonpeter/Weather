@@ -1,140 +1,194 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Weather App</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f0f0f0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .weather-container {
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      text-align: center;
-    }
-    .location {
-      font-size: 24px;
-      font-weight: bold;
-      margin: 10px 0;
-    }
-    .temperature {
-      font-size: 36px;
-      margin: 10px 0;
-    }
-    .description {
-      font-size: 18px;
-      color: #555;
-    }
-    .error {
-      color: red;
-      font-size: 16px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Clock & Weather</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #000000;
+            color: white;
+            text-align: center;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .clock {
+            font-size: 20vw;
+            font-weight: bold;
+            text-shadow: 0 0 20px #0ff;
+            margin-bottom: 5vh;
+        }
+        
+        .weather {
+            font-size: 5vw;
+            margin-bottom: 5vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .weather-icon {
+            width: 15vw;
+            height: 15vw;
+            margin-bottom: 2vh;
+        }
+        
+        .weather-info {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 3vw;
+        }
+        
+        .weather-data {
+            font-size: 4vw;
+        }
+        
+        .city-input {
+            margin-top: 3vh;
+            padding: 2vh 3vw;
+            font-size: 4vw;
+            border: none;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-align: center;
+            outline: none;
+            width: 80%;
+            max-width: 600px;
+        }
+        
+        .city-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        @media (min-width: 768px) {
+            .clock {
+                font-size: 10vw;
+            }
+            
+            .weather {
+                font-size: 3vw;
+            }
+            
+            .weather-icon {
+                width: 8vw;
+                height: 8vw;
+            }
+            
+            .weather-data {
+                font-size: 2vw;
+            }
+            
+            .city-input {
+                font-size: 2vw;
+                padding: 1vh 2vw;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="weather-container">
-    <div class="location">Loading location...</div>
-    <div class="temperature">--°C</div>
-    <div class="description">--</div>
-    <div class="error"></div>
-  </div>
+    <div class="container">
+        <div class="clock" id="clock">00:00:00</div>
+        
+        <div class="weather">
+            <img class="weather-icon" id="weather-icon" src="" alt="Weather Icon" style="display: none;">
+            <div id="weather-description"></div>
+            <div class="weather-info">
+                <div class="weather-data">
+                    <span id="temperature">--</span>°C
+                </div>
+                <div class="weather-data">
+                    Humidity: <span id="humidity">--</span>%
+                </div>
+                <div class="weather-data">
+                    Wind: <span id="wind">--</span> km/h
+                </div>
+            </div>
+        </div>
+        
+        <input type="text" class="city-input" id="city-input" placeholder="Enter city name">
+    </div>
 
-  <script>
-    // DOM Elements
-    const locationElement = document.querySelector('.location');
-    const temperatureElement = document.querySelector('.temperature');
-    const descriptionElement = document.querySelector('.description');
-    const errorElement = document.querySelector('.error');
-
-    // Function to fetch weather data from Open-Meteo
-    async function fetchWeather(lat, lon) {
-      const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
-      try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+    <script>
+        // Clock function
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            
+            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+            
+            // Update every second
+            setTimeout(updateClock, 1000);
         }
-        const data = await response.json();
-        displayWeather(data);
-      } catch (error) {
-        console.error('Error fetching weather data:', error);
-        errorElement.textContent = 'Failed to fetch weather data. Please try again later.';
-      }
-    }
-
-    // Function to display weather data
-    function displayWeather(data) {
-      const { temperature, weathercode } = data.current_weather;
-      const weatherDescription = getWeatherDescription(weathercode);
-
-      locationElement.textContent = `Lat: ${data.latitude}, Lon: ${data.longitude}`;
-      temperatureElement.textContent = `${temperature}°C`;
-      descriptionElement.textContent = weatherDescription;
-    }
-
-    // Function to convert weather code to description
-    function getWeatherDescription(weathercode) {
-      const weatherDescriptions = {
-        0: 'Clear sky',
-        1: 'Mainly clear',
-        2: 'Partly cloudy',
-        3: 'Overcast',
-        45: 'Fog',
-        48: 'Depositing rime fog',
-        51: 'Light drizzle',
-        53: 'Moderate drizzle',
-        55: 'Dense drizzle',
-        56: 'Light freezing drizzle',
-        57: 'Dense freezing drizzle',
-        61: 'Slight rain',
-        63: 'Moderate rain',
-        65: 'Heavy rain',
-        66: 'Light freezing rain',
-        67: 'Heavy freezing rain',
-        71: 'Slight snow fall',
-        73: 'Moderate snow fall',
-        75: 'Heavy snow fall',
-        77: 'Snow grains',
-        80: 'Slight rain showers',
-        81: 'Moderate rain showers',
-        82: 'Violent rain showers',
-        85: 'Slight snow showers',
-        86: 'Heavy snow showers',
-        95: 'Thunderstorm',
-        96: 'Thunderstorm with slight hail',
-        99: 'Thunderstorm with heavy hail',
-      };
-      return weatherDescriptions[weathercode] || 'Unknown weather';
-    }
-
-    // Function to handle location success
-    function onLocationSuccess(position) {
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
-      fetchWeather(lat, lon);
-    }
-
-    // Function to handle location error
-    function onLocationError(error) {
-      console.error('Error getting location:', error);
-      errorElement.textContent = 'Unable to retrieve location. Please enable location access in your browser settings.';
-    }
-
-    // Get user's location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(onLocationSuccess, onLocationError);
-    } else {
-      errorElement.textContent = 'Geolocation is not supported by your browser.';
-    }
-  </script>
+        
+        // Weather function
+        async function getWeather(city) {
+            const apiKey = '03f98efcfade4eccb3bb0689975585d5'; // Replace with your OpenWeatherMap API key
+            const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.cod === 200) {
+                    document.getElementById('temperature').textContent = Math.round(data.main.temp);
+                    document.getElementById('humidity').textContent = data.main.humidity;
+                    document.getElementById('wind').textContent = Math.round(data.wind.speed * 3.6); // Convert m/s to km/h
+                    document.getElementById('weather-description').textContent = data.weather[0].description;
+                    
+                    const icon = document.getElementById('weather-icon');
+                    icon.src = `https://openweathermap.org/img/wn/${data.weather[0].icon}@4x.png`;
+                    icon.style.display = 'block';
+                } else {
+                    alert('City not found. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error fetching weather:', error);
+                alert('Error fetching weather data. Please try again.');
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('city-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const city = this.value.trim();
+                if (city) {
+                    getWeather(city);
+                }
+            }
+        });
+        
+        // Initialize
+        updateClock();
+        
+        // Default city (optional)
+        // getWeather('London');
+    </script>
 </body>
 </html>
